@@ -1,0 +1,276 @@
+# -------------------- IMPORT SECTION --------------------
+
+# Importing required libraries
+import tkinter as tk                  # Used to create GUI
+from tkinter import messagebox        # Used to show popup messages
+import os                             # Added (not used, but imported as requested)
+import sys                            # Added (not used, but imported as requested)
+import time                           # Added (not used, but imported as requested)
+
+
+# -------------------- DATA STRUCTURE --------------------
+
+# equipment_list is a LIST that stores all available equipment items
+equipment_list = [
+    "Laptop 1", "Laptop 2",
+    "Projector A", "Projector B",
+    "Tablet 1", "Tablet 2"
+]
+
+# bookings is a LIST that will store all booking records as dictionaries
+bookings = []
+
+# booking_id_counter is used to generate unique ID for each booking
+booking_id_counter = 1
+
+
+# -------------------- MAIN WINDOW --------------------
+
+# Creating the main window
+root = tk.Tk()
+
+# Setting window title
+root.title("Student Equipment Booking System")
+
+# Setting window size
+root.geometry("800x600")
+
+# Setting background color
+root.configure(bg="#f2e4b3")
+
+
+# -------------------- FUNCTIONS (LOGIC UNCHANGED) --------------------
+
+# Function to add new equipment into equipment_list
+def add_equipment():
+    name = entry_equipment.get().strip()
+
+    if name:
+        if name not in equipment_list:
+            equipment_list.append(name)
+            messagebox.showinfo("Success", "Equipment added successfully.")
+        else:
+            messagebox.showwarning("Warning", "Equipment already exists.")
+
+    entry_equipment.delete(0, tk.END)
+
+
+# Function to record a new booking
+def record_booking():
+    global booking_id_counter
+
+    student = entry_student.get().strip()
+    equipment = entry_booking_equipment.get().strip()
+    date = entry_date.get().strip()
+
+    # Check if equipment exists
+    if equipment not in equipment_list:
+        messagebox.showwarning("Warning", "Equipment does not exist.")
+        return
+
+    # Prevent double booking on same date
+    for booking in bookings:
+        if booking["equipment"] == equipment and booking["date"] == date:
+            messagebox.showwarning("Warning", "Equipment already booked for this date.")
+            return
+
+    # Create booking dictionary
+    new_booking = {
+        "id": booking_id_counter,
+        "student": student,
+        "equipment": equipment,
+        "date": date
+    }
+
+    # Add booking to bookings list
+    bookings.append(new_booking)
+
+    # Increase ID counter
+    booking_id_counter += 1
+
+    messagebox.showinfo("Success", "Booking recorded successfully.")
+
+
+# Function to display all equipment
+def view_equipment():
+    output.delete("1.0", tk.END)
+
+    if not equipment_list:
+        output.insert(tk.END, "No equipment available.\n")
+    else:
+        for item in equipment_list:
+            output.insert(tk.END, f"{item}\n")
+
+
+# Function to display all bookings
+def view_bookings():
+    output.delete("1.0", tk.END)
+
+    if not bookings:
+        output.insert(tk.END, "No bookings found.\n")
+    else:
+        for booking in bookings:
+            output.insert(
+                tk.END,
+                f"ID: {booking['id']} | Student: {booking['student']} | "
+                f"Equipment: {booking['equipment']} | Date: {booking['date']}\n"
+            )
+
+
+# Function to search bookings by student name
+def search_by_student():
+    name = entry_search_student.get().strip()
+    output.delete("1.0", tk.END)
+
+    found = False
+
+    for booking in bookings:
+        if booking["student"] == name:
+            output.insert(
+                tk.END,
+                f"ID: {booking['id']} | Equipment: {booking['equipment']} | Date: {booking['date']}\n"
+            )
+            found = True
+
+    if not found:
+        output.insert(tk.END, "No bookings found.\n")
+
+
+# Function to cancel booking using Booking ID
+def cancel_booking():
+    try:
+        cancel_id = int(entry_cancel_id.get().strip())
+    except ValueError:
+        messagebox.showwarning("Warning", "Invalid ID.")
+        return
+
+    for booking in bookings:
+        if booking["id"] == cancel_id:
+            bookings.remove(booking)
+            messagebox.showinfo("Success", "Booking cancelled successfully.")
+            return
+
+    messagebox.showwarning("Warning", "Booking ID not found.")
+
+
+# -------------------- NEW FEATURE --------------------
+# Function to remove equipment item from equipment_list
+
+def remove_equipment():
+    name = entry_remove_equipment.get().strip()
+
+    if name in equipment_list:
+        equipment_list.remove(name)
+        messagebox.showinfo("Success", "Equipment removed successfully.")
+    else:
+        messagebox.showwarning("Warning", "Equipment not found.")
+
+    entry_remove_equipment.delete(0, tk.END)
+
+
+# -------------------- FRAME STRUCTURE --------------------
+
+# Title Frame
+frame_title = tk.Frame(root, bg="#f4f6f8")
+frame_title.pack(pady=10)
+
+tk.Label(frame_title,
+         text="Student Equipment Booking System",
+         font=("Arial", 18, "bold"),
+         bg="#f4f6f8",
+         fg="#2c3e50").pack()
+
+
+# -------------------- INPUT FRAME --------------------
+
+frame_input = tk.Frame(root, bg="#f4f6f8")
+frame_input.pack(pady=10)
+
+# Equipment Add Section
+tk.Label(frame_input, text="Equipment Name:", bg="#f4f6f8").grid(row=0, column=0, padx=5, pady=5, sticky="e")
+entry_equipment = tk.Entry(frame_input, width=25)
+entry_equipment.grid(row=0, column=1, padx=5, pady=5)
+
+tk.Button(frame_input, text="Add Equipment",
+          bg="#3498db", fg="white",
+          width=18, command=add_equipment).grid(row=0, column=2, padx=5)
+
+
+# Remove Equipment Section (NEW UI PART)
+tk.Label(frame_input, text="Remove Equipment:", bg="#f4f6f8").grid(row=0, column=3, padx=5, pady=5)
+entry_remove_equipment = tk.Entry(frame_input, width=25)
+entry_remove_equipment.grid(row=0, column=4, padx=5, pady=5)
+
+tk.Button(frame_input, text="Remove Item",
+          bg="#c0392b", fg="white",
+          width=15, command=remove_equipment).grid(row=0, column=5, padx=5)
+
+
+# Booking Section
+tk.Label(frame_input, text="Student Name:", bg="#f4f6f8").grid(row=1, column=0, padx=5, pady=5, sticky="e")
+entry_student = tk.Entry(frame_input, width=25)
+entry_student.grid(row=1, column=1, padx=5, pady=5)
+
+tk.Label(frame_input, text="Booking Equipment:", bg="#f4f6f8").grid(row=2, column=0, padx=5, pady=5, sticky="e")
+entry_booking_equipment = tk.Entry(frame_input, width=25)
+entry_booking_equipment.grid(row=2, column=1, padx=5, pady=5)
+
+tk.Label(frame_input, text="Date (DD-MM-YYYY):", bg="#f4f6f8").grid(row=3, column=0, padx=5, pady=5, sticky="e")
+entry_date = tk.Entry(frame_input, width=25)
+entry_date.grid(row=3, column=1, padx=5, pady=5)
+
+tk.Button(frame_input, text="Record Booking",
+          bg="#2ecc71", fg="white",
+          width=18, command=record_booking).grid(row=3, column=2, padx=5)
+
+
+# -------------------- ACTION FRAME --------------------
+
+frame_actions = tk.Frame(root, bg="#f4f6f8")
+frame_actions.pack(pady=10)
+
+tk.Button(frame_actions, text="View Equipment",
+          bg="#9b59b6", fg="white",
+          width=20, command=view_equipment).grid(row=0, column=0, padx=5)
+
+tk.Button(frame_actions, text="View All Bookings",
+          bg="#e67e22", fg="white",
+          width=20, command=view_bookings).grid(row=0, column=1, padx=5)
+
+
+# -------------------- SEARCH FRAME --------------------
+
+frame_search = tk.Frame(root, bg="#f4f6f8")
+frame_search.pack(pady=10)
+
+tk.Label(frame_search, text="Search by Student:", bg="#f4f6f8").grid(row=0, column=0, padx=5)
+entry_search_student = tk.Entry(frame_search, width=25)
+entry_search_student.grid(row=0, column=1, padx=5)
+
+tk.Button(frame_search, text="Search",
+          bg="#16a085", fg="white",
+          width=18, command=search_by_student).grid(row=0, column=2, padx=5)
+
+tk.Label(frame_search, text="Cancel Booking ID:", bg="#f4f6f8").grid(row=1, column=0, padx=5)
+entry_cancel_id = tk.Entry(frame_search, width=25)
+entry_cancel_id.grid(row=1, column=1, padx=5)
+
+tk.Button(frame_search, text="Cancel Booking",
+          bg="#e74c3c", fg="white",
+          width=18, command=cancel_booking).grid(row=1, column=2, padx=5)
+
+
+# -------------------- OUTPUT FRAME --------------------
+
+frame_output = tk.Frame(root, bg="#f4f6f8")
+frame_output.pack(pady=15)
+
+# Text widget used to display output results
+output = tk.Text(frame_output, width=90, height=10)
+output.pack()
+
+
+# -------------------- START APPLICATION --------------------
+
+# This keeps the window running
+root.mainloop()
