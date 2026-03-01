@@ -23,4 +23,4 @@ List (for storing equipment and bookings)
 Dictionary (for storing booking details)
 
 # How to Run
-I have added a file containing the code, copy and paste it into PyCharm to run the program.
+I have added a file called assessmentGUI containing the code, copy and paste it into PyCharm to run the program.
